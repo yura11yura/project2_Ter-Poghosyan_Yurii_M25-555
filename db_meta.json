@@ -1,0 +1,14 @@
+{
+  "user1": {
+    "columns": [
+      {
+        "name": "ID",
+        "type": "int"
+      },
+      {
+        "name": "age",
+        "type": "int"
+      }
+    ]
+  }
+}
