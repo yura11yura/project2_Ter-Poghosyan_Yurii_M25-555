@@ -13,6 +13,7 @@ from .core import (
     select,
     update,
 )
+from .decorators import handle_db_errors
 from .utils import load_metadata, load_table_data, save_metadata, save_table_data
 
 
@@ -43,6 +44,7 @@ def print_help():
     print("<command> exit - выход из программы")
     print("<command> help - справочная информация\n")
 
+@handle_db_errors
 def run():
     """
     Основной цикл программы
@@ -141,7 +143,7 @@ def run():
                     save_table_data(table_name, table_data)
                     
                     print(f'Запись с ID={new_id} успешно добавлена '
-                        'в таблицу "{table_name}".')
+                        f'в таблицу "{table_name}".')
                     
                 except ValueError as e:
                     print(f"Ошибка: {e}")
@@ -169,7 +171,7 @@ def run():
                     for column in where_clause.keys():
                         if column not in table_columns:
                             print(f'Ошибка: столбец "{column}" '
-                                'не существует в таблице "{table_name}"')
+                                f'не существует в таблице "{table_name}"')
                             continue
                     
                     table_data = load_table_data(table_name)
@@ -178,7 +180,7 @@ def run():
                     if deleted_count > 0:
                         save_table_data(table_name, new_data)
                         print(f'Удалено {deleted_count} '
-                            'записей из таблицы "{table_name}".')
+                            f'записей из таблицы "{table_name}".')
                     else:
                         print("Нет записей, соответствующих условию.")
                         
@@ -226,13 +228,13 @@ def run():
                     for column in set_clause.keys():
                         if column not in table_columns:
                             print(f'Ошибка: столбец "{column}" '
-                                'не существует в таблице "{table_name}"')
+                                f'не существует в таблице "{table_name}"')
                             continue
                     
                     for column in where_clause.keys():
                         if column not in table_columns:
                             print(f'Ошибка: столбец "{column}" '
-                                'не существует в таблице "{table_name}"')
+                                f'не существует в таблице "{table_name}"')
                             continue
                     
                     table_data = load_table_data(table_name)
@@ -242,7 +244,7 @@ def run():
                     if amount_updated > 0:
                         save_table_data(table_name, updated_data)
                         print(f'Обновлено {amount_updated} '
-                            'записей в таблице "{table_name}".')
+                            f'записей в таблице "{table_name}".')
                     else:
                         print("Нет записей, соответствующих условию.")
                         

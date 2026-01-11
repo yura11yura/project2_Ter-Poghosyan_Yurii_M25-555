@@ -4,8 +4,10 @@ import json
 import os
 
 from .constrants import DB_INFO_DATAPATH, TABLES_DATAPATH
+from .decorators import handle_db_errors
 
 
+@handle_db_errors
 def load_metadata(filepath=DB_INFO_DATAPATH):
     """
     Функция для загрузки данных из JSON файла
@@ -19,6 +21,7 @@ def load_metadata(filepath=DB_INFO_DATAPATH):
     except FileNotFoundError:
         return {}
 
+@handle_db_errors
 def save_metadata(data, filepath=DB_INFO_DATAPATH):
     """
     Функция для сохранения данных в JSON файл
@@ -30,6 +33,7 @@ def save_metadata(data, filepath=DB_INFO_DATAPATH):
     with open(filepath, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
+@handle_db_errors
 def load_table_data(table_name):
     """
     Функция для загрузки таблицы из JSON файла
@@ -44,6 +48,7 @@ def load_table_data(table_name):
     except FileNotFoundError:
         return []
 
+@handle_db_errors
 def save_table_data(table_name, data):
     """
     Функция для сохранения таблицы в JSON файл

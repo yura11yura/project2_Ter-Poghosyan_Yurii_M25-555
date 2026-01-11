@@ -3,8 +3,10 @@
 from prettytable import PrettyTable
 
 from .constrants import DATA_TYPES
+from .decorators import confirm_action, create_cacher, handle_db_errors, log_time
 
 
+@handle_db_errors
 def create_table(metadata, table_name, columns):
     """
     Функция для создания таблицы
@@ -51,6 +53,8 @@ def create_table(metadata, table_name, columns):
     
     return metadata
 
+@handle_db_errors
+@confirm_action("удаление таблицы")
 def drop_table(metadata, table_name):
     """
     Функция для создания таблицы
@@ -73,6 +77,7 @@ def list_tables(metadata):
     else:
         print("Нет созданных таблиц.")
 
+@handle_db_errors
 def insert(metadata, table_name, values):
     """
     Функция для получения новых записей в таблицу
@@ -129,6 +134,8 @@ def insert(metadata, table_name, values):
     
     return new_record
 
+@handle_db_errors
+@confirm_action("удаление записей")
 def delete(table_data, where_clause):
     """
     Функция для удаления данных из таблицы
@@ -161,6 +168,7 @@ def delete(table_data, where_clause):
     
     return new_data, amount_deleted
 
+@handle_db_errors
 def update(table_data, set_clause, where_clause):
     """
     Функция для обновления данных в таблице
@@ -190,6 +198,10 @@ def update(table_data, set_clause, where_clause):
     
     return table_data, amount_updated
 
+select_cache = create_cacher()
+
+@handle_db_errors
+@log_time
 def select(table_data, where_clause=None):
     """
     Функция для выборки данных из таблицы
@@ -205,20 +217,26 @@ def select(table_data, where_clause=None):
         return []
     
     if where_clause is None:
-        return table_data
+        cache_key = "all_records"
+    else:
+        cache_key = str(sorted(where_clause.items()))
     
-    filtered_data = []
-    for record in table_data:
-        match = True
-        for column, value in where_clause.items():
-            if column not in record or record[column] != value:
-                match = False
-                break
+    def fetch_data():
+        if where_clause is None:
+            return table_data
+        filtered_data = []
+        for record in table_data:
+            match = True
+            for column, value in where_clause.items():
+                if column not in record or record[column] != value:
+                    match = False
+                    break
+            
+            if match:
+                filtered_data.append(record)
         
-        if match:
-            filtered_data.append(record)
-    
-    return filtered_data
+        return filtered_data
+    return select_cache(cache_key, fetch_data)
 
 def print_table_info(metadata, table_name, table_data):
     """
@@ -248,7 +266,7 @@ def display_table(table_data, columns):
         columns - список, содержит столбцы таблицы
     """
     if not table_data:
-        print("Нет данных для отображения.")
+        print("Таблица пустая.")
         return
     
     table = PrettyTable()
