@@ -2,4 +2,5 @@
 
 DATA_TYPES = {"int", "str", "bool"}
 
-DEFAULT_DATAPATH = "db_meta.json"
+DB_INFO_DATAPATH = "db_meta.json"
+TABLES_DATAPATH = "data/"
