@@ -1,8 +1,10 @@
 # src/primitive_db/core.py
 
+import os
+
 from prettytable import PrettyTable
 
-from .constrants import DATA_TYPES
+from .constrants import DATA_TYPES, TABLES_DATAPATH
 from .decorators import confirm_action, create_cacher, handle_db_errors, log_time
 
 
@@ -65,6 +67,13 @@ def drop_table(metadata, table_name):
     """
     if table_name not in metadata:
         raise ValueError(f'Таблица "{table_name}" не существует.')
+
+    table_datapath = os.path.join(TABLES_DATAPATH, f"{table_name}.json")
+    try:
+        if os.path.exists(table_datapath):
+            os.remove(table_datapath)
+    except OSError as e:
+        print(f"Ошибка: не удалось удалить файл для таблицы {table_name}: {e}")
     
     del metadata[table_name]
     return metadata
@@ -198,7 +207,7 @@ def update(table_data, set_clause, where_clause):
     
     return table_data, amount_updated
 
-select_cache = create_cacher()
+select_cache, clear_select_cache = create_cacher()
 
 @handle_db_errors
 @log_time

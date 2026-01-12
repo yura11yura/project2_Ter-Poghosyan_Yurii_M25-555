@@ -72,6 +72,7 @@ def create_cacher():
 
     Возвращает:
         cache_result(key, value_func) - внутренняя функция, зранит кэш
+        clear_cache - внутренняя функция, очищает кэш
     """
     cache = {}
     
@@ -83,4 +84,7 @@ def create_cacher():
         cache[key] = result
         return result
     
-    return cache_result
+    def clear_cache():
+        cache.clear()
+    
+    return cache_result, clear_cache

@@ -3,6 +3,7 @@
 import shlex
 
 from .core import (
+    clear_select_cache,
     create_table,
     delete,
     display_table,
@@ -81,12 +82,13 @@ def run():
                 
                 try:
                     metadata = create_table(metadata, table_name, columns)
-                    save_metadata(metadata)
-                    table_info = ', '.join(f"{col['name']}:{col['type']}" \
-                        for col in metadata[table_name]['columns'])
-                    print(f'Таблица "{table_name}" успешно создана '
-                        f'со столбцами: {table_info}')
-                    
+
+                    if metadata is not None:
+                        save_metadata(metadata)
+                        table_info = ', '.join(f"{col['name']}:{col['type']}" \
+                            for col in metadata[table_name]['columns'])
+                        print(f'Таблица "{table_name}" успешно создана '
+                            f'со столбцами: {table_info}')
                 except ValueError as e:
                     print(f"Ошибка: {e}")
 
@@ -100,8 +102,10 @@ def run():
                 
                 try:
                     metadata = drop_table(metadata, table_name)
-                    save_metadata(metadata)
-                    print(f'Таблица "{table_name}" успешно удалена.')
+
+                    if metadata is not None:
+                        save_metadata(metadata)
+                        print(f'Таблица "{table_name}" успешно удалена.')
                     
                 except ValueError as e:
                     print(f"Ошибка: {e}")
@@ -129,21 +133,24 @@ def run():
                     table_data = load_table_data(table_name)
                     
                     new_record = insert(metadata, table_name, values)
-                    
-                    if table_data:
-                        max_id = max(int(record.get('ID', 0)) 
-                            for record in table_data)
-                        new_id = max_id + 1
-                    else:
-                        new_id = 1
-                    
-                    new_record['ID'] = new_id
-                    table_data.append(new_record)
-                    
-                    save_table_data(table_name, table_data)
-                    
-                    print(f'Запись с ID={new_id} успешно добавлена '
-                        f'в таблицу "{table_name}".')
+
+                    if new_record is not None:
+                        if table_data:
+                            max_id = max(int(record.get('ID', 0)) 
+                                for record in table_data)
+                            new_id = max_id + 1
+                        else:
+                            new_id = 1
+                        
+                        new_record['ID'] = new_id
+                        table_data.append(new_record)
+                        
+                        save_table_data(table_name, table_data)
+
+                        clear_select_cache()
+                        
+                        print(f'Запись с ID={new_id} успешно добавлена '
+                            f'в таблицу "{table_name}".')
                     
                 except ValueError as e:
                     print(f"Ошибка: {e}")
@@ -168,21 +175,29 @@ def run():
                     
                     table_columns = [col['name'] for col in \
                         metadata[table_name]['columns']]
-                    for column in where_clause.keys():
-                        if column not in table_columns:
-                            print(f'Ошибка: столбец "{column}" '
-                                f'не существует в таблице "{table_name}"')
-                            continue
+                    
+                    if where_clause:
+                        for column in where_clause.keys():
+                            if column not in table_columns:
+                                print(f'Ошибка: столбец "{column}" '
+                                    f'не существует в таблице "{table_name}"')
+                                continue
+                    else:
+                        print("Ошибка: некорректный формат команды. "
+                        "Формат: delete from <таблица> where <условие>")
+                        continue
                     
                     table_data = load_table_data(table_name)
                     new_data, deleted_count = delete(table_data, where_clause)
                     
-                    if deleted_count > 0:
-                        save_table_data(table_name, new_data)
-                        print(f'Удалено {deleted_count} '
-                            f'записей из таблицы "{table_name}".')
-                    else:
-                        print("Нет записей, соответствующих условию.")
+                    if new_data is not None:
+                        if deleted_count > 0:
+                            save_table_data(table_name, new_data)
+                            clear_select_cache()
+                            print(f'Удалено {deleted_count} '
+                                f'записей из таблицы "{table_name}".')
+                        else:
+                            print("Нет записей, соответствующих условию.")
                         
                 except ValueError as e:
                     print(f"Ошибка: {e}")
@@ -204,9 +219,12 @@ def run():
 
             elif command == "update":
                 if len(args) < 8 or args[2].lower() != "set" or \
-                    args[-2].lower() != "where":
-                    print("Ошибка: некорректный формат команды. Формат: "
-                        "update <таблица> set <столбец>=<значение> where <условие>")
+                    args[-4].lower() != "where":
+                    print(args[2].lower())
+                    print(args[-4].lower())
+                    print("here Ошибка: некорректный формат команды. "
+                        "Формат: update <таблица> set <столбец>=<значение> "
+                        "where <условие>")
                     continue
 
                 table_name = args[1]
@@ -227,26 +245,28 @@ def run():
                     
                     for column in set_clause.keys():
                         if column not in table_columns:
-                            print(f'Ошибка: столбец "{column}" '
-                                f'не существует в таблице "{table_name}"')
+                            print(f'Ошибка: столбец "{column}" не '
+                                f'существует в таблице "{table_name}"')
                             continue
                     
                     for column in where_clause.keys():
                         if column not in table_columns:
-                            print(f'Ошибка: столбец "{column}" '
-                                f'не существует в таблице "{table_name}"')
+                            print(f'Ошибка: столбец "{column}" не '
+                                f'существует в таблице "{table_name}"')
                             continue
                     
                     table_data = load_table_data(table_name)
                     updated_data, amount_updated = \
                         update(table_data, set_clause, where_clause)
                     
-                    if amount_updated > 0:
-                        save_table_data(table_name, updated_data)
-                        print(f'Обновлено {amount_updated} '
-                            f'записей в таблице "{table_name}".')
-                    else:
-                        print("Нет записей, соответствующих условию.")
+                    if updated_data is not None:
+                        if amount_updated > 0:
+                            save_table_data(table_name, updated_data)
+                            clear_select_cache()
+                            print(f'Обновлено {amount_updated} '
+                                f'записей в таблице "{table_name}".')
+                        else:
+                            print("Нет записей, соответствующих условию.")
                         
                 except ValueError as e:
                     print(f"Ошибка: {e}")
@@ -286,10 +306,12 @@ def run():
                     
                     filtered_data = select(table_data, where_clause)
                     
-                    if filtered_data:
-                        display_table(filtered_data, metadata[table_name]['columns'])
-                    else:
-                        print("Нет данных, соответствующих условию.")
+                    if filtered_data is not None:
+                        if filtered_data:
+                            display_table(filtered_data, \
+                                metadata[table_name]['columns'])
+                        else:
+                            print("Нет данных, соответствующих условию.")
                         
                 except ValueError as e:
                     print(f"Ошибка: {e}")
