@@ -35,7 +35,7 @@ def confirm_action(action_name):
     Декоратор для подтверждения опасных операций
 
     Параметры:
-        action_name - строка, содержит название операции
+        action_name - строка, содержит выполняемую операцию
     """
     def decorator(func):
         @wraps(func)

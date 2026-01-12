@@ -59,7 +59,7 @@ def create_table(metadata, table_name, columns):
 @confirm_action("удаление таблицы")
 def drop_table(metadata, table_name):
     """
-    Функция для создания таблицы
+    Функция для удаления таблицы
 
     Параметры:
         metadata - словарь, содержит текущие метаданные
@@ -79,6 +79,12 @@ def drop_table(metadata, table_name):
     return metadata
 
 def list_tables(metadata):
+    """
+    Функция для вывода названий созданных таблиц
+    
+    Параметры:
+        metadata - словарь, содержит текущие метаданные
+    """
     tables = list(metadata.keys())
     if tables:
         for table in tables:

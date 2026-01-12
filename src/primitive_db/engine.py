@@ -331,6 +331,9 @@ def parse_where(where_clause):
 
     Параметры:
         where_clause - строка, содержит условие where
+
+    Возвращает:
+        result - словарь со столбцом и значением из where условия
     """
     if not where_clause:
         return None
@@ -357,6 +360,9 @@ def parse_set(set_clause):
 
     Параметры:
         set_clause - строка, содержит выражение set
+
+    Возвращает:
+        result - словарь со столбцом и значением из set выражения
     """
     if not set_clause:
         return {}
@@ -378,6 +384,12 @@ def parse_set(set_clause):
 def parse_value(value):
     """
     Функция для преобразования значения в соответствующий тип
+
+    Параметры:
+        value - строка с значением, которое нужно преобразовать
+
+    Возвращает:
+        value - значение в полученном типе
     """
     if len(value) >= 2 and value[0] == value[-1] and value[0] in ['"', "'"]:
         return value[1:-1]
